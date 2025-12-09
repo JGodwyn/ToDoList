@@ -13,7 +13,8 @@ struct CreateCategory: View {
     @FocusState private var inputNameFocused : Bool
     @State private var noNameError : Bool = false
     @State private var attempts : Int = 0
-    @State private var CategoryItem = Categories(name: "")
+    @State private var CategoryItem = Categories()
+    let tappedButton : () -> Void
     
     
     var body: some View {
@@ -45,10 +46,14 @@ struct CreateCategory: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                             noNameError = false
                         }
+                    } else {
+                        categoryContext.insert(CategoryItem)
+                        tappedButton()
                     }
-                    
-                    // enter button logic
-                    categoryContext.insert(CategoryItem)
+                }
+                
+                MainButton(label: "Cancel", lightBtn: true, fillContainer: true) {
+                    tappedButton()
                 }
             }
         }
@@ -67,7 +72,7 @@ struct CreateCategory: View {
 }
 
 #Preview {
-    CreateCategory()
+    CreateCategory() {}
 }
 
 

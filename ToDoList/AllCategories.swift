@@ -6,16 +6,53 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct AllCategories: View {
+    
+    @State private var presentCreateSheet : Bool = false
+    @State private var addingCategory : Bool = false
+    @Query private var categoriesQuery: [Categories]
+    
     var body: some View {
-        List {
-            Text("This is for all your categories")
+        NavigationStack {
+            List {
+                ForEach(categoriesQuery) { item in
+                    Text(item.name)
+                }
+            }
+            .navigationTitle("Categories")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        addingCategory = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
         }
-        .navigationTitle("Categories")
+        .overlay {
+            if addingCategory {
+                ZStack {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.2))
+                        .background(.ultraThinMaterial)
+                        .ignoresSafeArea()
+                    
+                    CreateCategory() {
+                        addingCategory = false
+                    }
+                        .padding(.horizontal, 32)
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut, value: addingCategory)
     }
 }
 
 #Preview {
     AllCategories()
+        .modelContainer(for: Categories.self)
 }

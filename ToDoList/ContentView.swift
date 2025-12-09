@@ -178,5 +178,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: TodoItem.self)
+        .modelContainer(for: [TodoItem.self, Categories.self])
 }

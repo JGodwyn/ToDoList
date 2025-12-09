@@ -31,14 +31,3 @@ final class TodoItem {
         self.isCompleted = isCompleted
     }
 }
-
-@Model
-final class Categories {
-    var name: String
-    var created: Date
-
-    init(name: String, created: Date = .now) {
-        self.name = name
-        self.created = created
-    }
-}

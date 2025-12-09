@@ -11,6 +11,7 @@ import SwiftUI
 enum BrandColors {
     // Carbons
     static let BrandMain : Color = Color("Blurple600")
+    static let BrandSec : Color = Color("Blurple0")
     
     // Grays
     static let Gray0 : Color = Color("Gray0")
