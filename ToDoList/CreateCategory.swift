@@ -5,84 +5,179 @@
 //  Created by Gdwn16 on 08/12/2025.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct CreateCategory: View {
     @Environment(\.modelContext) var categoryContext
-    @FocusState private var inputNameFocused : Bool
-    @State private var noNameError : Bool = false
-    @State private var attempts : Int = 0
+    @FocusState private var inputNameFocused: Bool
+    @State private var noNameError: Bool = false
+    @State private var attempts: Int = 0
     @State private var CategoryItem = Categories()
-    let tappedButton : () -> Void
-    
-    
+    @State private var CategoryColor: CategoryColors = .BrightIndigo
+    @State private var showColorMenu: Bool = false
+    let tappedButton: () -> Void
+
     var body: some View {
-        VStack(spacing: 8) {
-            BrandImages.BrandLogo
-                .resizable()
-                .frame(width: 32, height: 32)
-            Text("Name this category")
-                .foregroundStyle(.gray)
-                .bold()
-            
-            TextField(text: $CategoryItem.name) {
-                Text(noNameError ? "Enter name first" : "Type here")
-                    .foregroundStyle(noNameError ? .red.opacity(0.5) : BrandColors.Gray200)
-            }
-            .modifier(ShakeEffect(animatableData: CGFloat(attempts)))
-            .font(.system(size: 24, weight: .bold))
-            .multilineTextAlignment(.center)
-            .padding(.vertical, 32)
-            .focused($inputNameFocused)
-            
-            VStack(spacing: 16) {
-                MainButton(label: "Create Category", fillContainer: true) {
-                    if CategoryItem.name.isEmpty {
-                        noNameError = true
-                        withAnimation (.easeOut) {
-                            attempts += 1
+        ZStack {
+
+            // use this to dismiss every open menu when they're tapped beyond bounds
+            Color.white.opacity(0.0001)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    showColorMenu = false
+                }
+
+            VStack(spacing: 8) {
+                TextField(text: $CategoryItem.name) {
+                    Text(noNameError ? "Enter name first" : "Category name")
+                        .foregroundStyle(
+                            noNameError
+                                ? .red.opacity(0.5) : BrandColors.Gray200
+                        )
+                }
+                .modifier(ShakeEffect(animatableData: CGFloat(attempts)))
+                .font(.system(size: 24, weight: .bold))
+                .multilineTextAlignment(.center)
+                .padding(.vertical, 32)
+                .focused($inputNameFocused)
+
+                // color picker
+                HStack(spacing: 16) {
+                    Button {
+                        showColorMenu.toggle()
+                    } label: {
+                        HStack {
+                            Text(CategoryColor.colorDescription)
+                                .font(.system(size: 18, weight: .bold))
+                            RoundedRectangle(cornerRadius: 16, style: .circular)
+                                .frame(width: 24, height: 24)
+                                .foregroundStyle(
+                                    Color(hex: CategoryColor.colorCode)
+                                )
                         }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            noNameError = false
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            Color(hex: CategoryColor.colorCode).opacity(0.1),
+                            in: RoundedRectangle(
+                                cornerRadius: 16,
+                                style: .continuous
+                            )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.bottom, 24)
+                .zIndex(100)
+                .overlay(alignment: .bottom) {
+
+                    // Color menu
+                    if showColorMenu {
+                        VStack {
+                            ScrollView(showsIndicators: false) {
+                                VStack(spacing: 0) {
+                                    ForEach(CategoryColors.allCases, id: \.self)
+                                    { category in
+                                        Button {
+                                            showColorMenu = false
+                                            CategoryColor = category
+                                        } label: {
+                                            HStack {
+                                                RoundedRectangle(
+                                                    cornerRadius: 16,
+                                                    style: .circular
+                                                )
+                                                .frame(width: 24, height: 24)
+                                                .foregroundStyle(
+                                                    Color(
+                                                        hex: category.colorCode
+                                                    )
+                                                )
+                                                Text(category.colorDescription)
+                                                    .tag(category)
+                                            }
+                                            .frame(height: 48)
+                                            .frame(
+                                                maxWidth: .infinity,
+                                                alignment: .leading
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
                         }
-                    } else {
-                        categoryContext.insert(CategoryItem)
+                        .padding(.horizontal, 24)
+                        .frame(width: 280, height: 256)
+                        .glassEffect(in: RoundedRectangle(cornerRadius: 48))
+                        .padding(.bottom, 56)
+                        .transition(
+                            .move(edge: .bottom).combined(with: .blurReplace)
+                                .combined(with: .scale)
+                        )
+                    }
+                }
+
+                // Buttons
+                VStack(spacing: 16) {
+                    MainButton(label: "Create Category", fillContainer: true) {
+                        if CategoryItem.name.isEmpty {
+                            noNameError = true
+                            withAnimation(.easeOut) {
+                                attempts += 1
+                            }
+                            DispatchQueue.main.asyncAfter(
+                                deadline: .now() + 1.5
+                            ) {
+                                noNameError = false
+                            }
+                        } else {
+                            CategoryItem.color = CategoryColor.colorCode
+                            categoryContext.insert(CategoryItem)
+                            tappedButton()
+                        }
+                    }
+
+                    MainButton(
+                        label: "Cancel",
+                        lightBtn: true,
+                        fillContainer: true
+                    ) {
                         tappedButton()
                     }
                 }
-                
-                MainButton(label: "Cancel", lightBtn: true, fillContainer: true) {
-                    tappedButton()
+            }
+            .overlay(alignment: .top) {
+                if noNameError {
+
+                }
+            }
+            .animation(.spring, value: noNameError)
+            .onAppear {
+                withAnimation {
+                    inputNameFocused = true
                 }
             }
         }
-        .overlay(alignment: .top) {
-            if noNameError {
-                
-            }
-        }
-        .animation(.spring, value: noNameError)
-        .onAppear {
-            withAnimation {
-                inputNameFocused = true
-            }
-        }
+        .animation(.spring(duration: 0.2), value: showColorMenu)
     }
 }
 
 #Preview {
-    CreateCategory() {}
+    CreateCategory {}
 }
 
-
 struct ShakeEffect: GeometryEffect {
-    var amount: CGFloat = 12 // The maximum offset during the shake
-    var shakesPerUnit: Int = 3 // Number of shakes per animation cycle
-    var animatableData: CGFloat // The progress of the animation
-    
+    var amount: CGFloat = 12  // The maximum offset during the shake
+    var shakesPerUnit: Int = 3  // Number of shakes per animation cycle
+    var animatableData: CGFloat  // The progress of the animation
+
     func effectValue(size: CGSize) -> ProjectionTransform {
-        let translationX = amount * sin(animatableData * .pi * CGFloat(shakesPerUnit))
-        return ProjectionTransform(CGAffineTransform(translationX: translationX, y: 0))
+        let translationX =
+            amount * sin(animatableData * .pi * CGFloat(shakesPerUnit))
+        return ProjectionTransform(
+            CGAffineTransform(translationX: translationX, y: 0)
+        )
     }
 }

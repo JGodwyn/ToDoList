@@ -12,13 +12,28 @@ struct AllCategories: View {
     
     @State private var presentCreateSheet : Bool = false
     @State private var addingCategory : Bool = false
-    @Query private var categoriesQuery: [Categories]
+//    @Query private var categoriesQuery: [Categories]
+    @Query(sort: \Categories.created) private var categoriesQuery: [Categories]
     
     var body: some View {
         NavigationStack {
             List {
                 ForEach(categoriesQuery) { item in
-                    Text(item.name)
+                    HStack(alignment: .top, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(item.name)
+                                .font(.system(size: 22))
+                            Text(
+                                item.created,
+                                format: Date.FormatStyle(date: .long, time: .shortened)
+                            )
+                            .foregroundStyle(BrandColors.Gray600)
+                        }
+                        Spacer()
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .frame(width: 32, height: 32)
+                            .foregroundStyle(Color(hex: item.color))
+                    }
                 }
             }
             .navigationTitle("Categories")
@@ -31,6 +46,7 @@ struct AllCategories: View {
                     }
                 }
             }
+            .transition(.opacity)
         }
         .overlay {
             if addingCategory {
@@ -49,6 +65,7 @@ struct AllCategories: View {
             }
         }
         .animation(.easeInOut, value: addingCategory)
+        .toolbar(addingCategory ? .hidden : .visible)
     }
 }
 

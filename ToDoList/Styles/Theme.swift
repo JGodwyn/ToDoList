@@ -19,6 +19,9 @@ enum BrandColors {
     static let Gray100 : Color = Color("Gray100")
     static let Gray200 : Color = Color("Gray200")
     static let Gray300 : Color = Color("Gray300")
+    static let Gray400 : Color = Color("Gray400")
+    static let Gray500 : Color = Color("Gray500")
+    static let Gray600 : Color = Color("Gray600")
 }
 
 enum BrandImages {
