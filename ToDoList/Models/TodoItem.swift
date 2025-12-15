@@ -18,16 +18,19 @@ final class TodoItem {
     var timeStamp: Date
     var isCritical: Bool
     var isCompleted: Bool
+    var categories : [Categories]
 
     init(
         title: String = "",
         timeStamp: Date = .now,
         isCritical: Bool = false,
-        isCompleted: Bool = false
+        isCompleted: Bool = false,
+        categories: [Categories] = []
     ) {
         self.title = title
         self.timeStamp = timeStamp
         self.isCritical = isCritical
         self.isCompleted = isCompleted
+        self.categories = categories
     }
 }

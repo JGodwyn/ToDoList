@@ -5,38 +5,79 @@
 //  Created by Gdwn16 on 09/12/2025.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct AllCategories: View {
-    
-    @State private var presentCreateSheet : Bool = false
-    @State private var addingCategory : Bool = false
-//    @Query private var categoriesQuery: [Categories]
-    @Query(sort: \Categories.created) private var categoriesQuery: [Categories]
-    
+
+    @Environment(\.modelContext) var context
+    @Query(sort: \Categories.created, order: .reverse) private
+        var categoriesQuery: [Categories]
+    @State private var presentCreateSheet: Bool = false
+    @State private var addingCategory: Bool = false
+    @State private var selectedCategory: Categories?
+
     var body: some View {
         NavigationStack {
             List {
                 ForEach(categoriesQuery) { item in
-                    HStack(alignment: .top, spacing: 16) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(item.name)
-                                .font(.system(size: 22))
-                            Text(
-                                item.created,
-                                format: Date.FormatStyle(date: .long, time: .shortened)
+                    Button {
+                        selectedCategory = item
+                    } label: {
+                        HStack(alignment: .top, spacing: 16) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(item.name)
+                                    .font(.system(size: 22))
+                                Text(
+                                    item.created,
+                                    format: Date.FormatStyle(
+                                        date: .long,
+                                        time: .shortened
+                                    )
+                                )
+                                .foregroundStyle(BrandColors.Gray600)
+                            }
+                            Spacer()
+                            RoundedRectangle(
+                                cornerRadius: 8,
+                                style: .continuous
                             )
-                            .foregroundStyle(BrandColors.Gray600)
-                        }
-                        Spacer()
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .frame(width: 32, height: 32)
-                            .foregroundStyle(Color(hex: item.color))
+                            .foregroundStyle(Color(hex: item.colorCode))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .swipeActions {
+                        Button(role: .destructive) {
+                            context.delete(item)
+                            try? context.save()
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+
+                        Button {
+                            selectedCategory = item
+                        } label: {
+                            Image(systemName: "pencil")
+                                .tint(BrandColors.BrandMain.opacity(0.5))
+                        }
                     }
                 }
+
             }
             .navigationTitle("Categories")
+            .sheet(
+                item: $selectedCategory,
+                onDismiss: {
+                    selectedCategory = nil
+                },
+                content: { item in
+                    CategoryDetail(categoryObj: item)
+                        .interactiveDismissDisabled()
+                        .presentationDetents([.height(352)])
+                }
+            )
+            .toolbar(addingCategory ? .hidden : .visible) // show and hide toolbar
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -47,6 +88,28 @@ struct AllCategories: View {
                 }
             }
             .transition(.opacity)
+            .overlay {
+                if categoriesQuery.isEmpty {
+                    if !addingCategory {
+                        VStack(spacing: 16) {
+                            Image(systemName: "tray.full.fill")
+                                .font(.system(size: 32))
+                                .foregroundStyle(BrandColors.Gray400)
+                            Text("No categories to show here")
+                                .font(.system(size: 20))
+                                .foregroundStyle(BrandColors.Gray400)
+                            MainButton(label: "Add category") {
+                                addingCategory = true
+                            }
+                        }
+                        .padding(.vertical, 32)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .navigationTitle("Categories")
+                        .transition(.opacity)
+                    }
+                }
+            }
+
         }
         .overlay {
             if addingCategory {
@@ -55,17 +118,16 @@ struct AllCategories: View {
                         .fill(Color.white.opacity(0.2))
                         .background(.ultraThinMaterial)
                         .ignoresSafeArea()
-                    
-                    CreateCategory() {
+
+                    CreateCategory {
                         addingCategory = false
                     }
-                        .padding(.horizontal, 32)
+                    .padding(.horizontal, 32)
                 }
                 .transition(.opacity)
             }
         }
         .animation(.easeInOut, value: addingCategory)
-        .toolbar(addingCategory ? .hidden : .visible)
     }
 }
 

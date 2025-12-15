@@ -21,12 +21,25 @@ struct ToDoDetail: View {
     @State private var todoTemp : ToDoTemp = .example
     
     var body: some View {
-        List {
+        VStack {
             TextField("Name", text: $todoTemp.title)
-            DatePicker("Choose a date", selection: $todoTemp.timeStamp)
+                .padding()
+                .padding(.horizontal, 4)
+                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24))
+            DatePicker("Date", selection: $todoTemp.timeStamp)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
             Toggle("Important", isOn: $todoTemp.isCritical)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
             Toggle("Done with this task?", isOn: $todoTemp.isCompleted)
-            Button("Update") {
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            
+            MainButton(label: "Update", fillContainer: true, disabled: todoTemp.title.isEmpty) {
                 withAnimation {
                     todoObj.title = todoTemp.title
                     todoObj.timeStamp = todoTemp.timeStamp
@@ -36,6 +49,8 @@ struct ToDoDetail: View {
                 dismiss()
             }
         }
+        .padding()
+        .frame(maxHeight: .infinity, alignment: .top)
         .navigationTitle("Your To-do")
         .animation(.easeOut, value: todoObj.isCompleted)
         .toolbar {

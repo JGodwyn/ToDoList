@@ -36,7 +36,7 @@ struct MainButtonStyle : ButtonStyle {
         .frame(maxWidth: fillContainer ? .infinity : .none)
         .foregroundStyle(lightBtn ? .blurple600 : .gray0)
         .background(lightBtn ? BrandColors.BrandSec : color)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: 32))
         .opacity(configuration.isPressed ? 0.7 : 1) // have the click effect
         .scaleEffect(configuration.isPressed ? 0.5 : 1) // slightly scale down
         .animation(.easeInOut(duration: 0.2), value: configuration.isPressed) // animate it

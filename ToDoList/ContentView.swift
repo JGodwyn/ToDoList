@@ -37,6 +37,22 @@ struct ContentView: View {
         NavigationStack {
             List {
                 // ongoing tasks list
+                if ongoingTodos.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "tray.full.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(BrandColors.Gray400)
+                        Text("You have no ongoing tasks")
+                            .font(.system(size: 17))
+                            .foregroundStyle(BrandColors.Gray400)
+                        MainButton(label: "Add a task", height: 32) {
+                            showCreateSheet.toggle()
+                        }
+                        .padding(8)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .init(horizontal: .center, vertical: .center))
+                    .frame(minHeight: 256)
+                }
                 ForEach(ongoingTodos) { item in
                     Button {
                         selectedTodo = item
@@ -48,6 +64,7 @@ struct ContentView: View {
                         Button(role: .destructive) {
                             withAnimation {
                                 context.delete(item)
+                                try? context.save()  // add this to persist storage immediately
                             }
                         } label: {
                             Image(systemName: "trash")
@@ -63,34 +80,32 @@ struct ContentView: View {
                 }
 
                 // Show and hide completed tasks button
-                if !ongoingTodos.isEmpty {
-                    Button {
-                        withAnimation(.smooth(duration: 0.5)) {
-                            showCompletedTask.toggle()
-                        }
-                    } label: {
-                        HStack {
-                            Image(systemName: "eye.fill")
-                                .foregroundStyle(
-                                    showCompletedTask ? .black : .gray
-                                )
-                                .rotation3DEffect(
-                                    .degrees(showCompletedTask ? 180 : 0),
-                                    axis: (x: 1, y: 0, z: 0)
-                                )
-                            Text("Completed tasks")
-                                .font(.system(size: 20))
-                            Spacer()
-                            Image(
-                                systemName: "chevron.down"
+                Button {
+                    withAnimation(.smooth(duration: 0.5)) {
+                        showCompletedTask.toggle()
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "eye.fill")
+                            .foregroundStyle(
+                                showCompletedTask ? .black : .gray
                             )
                             .rotation3DEffect(
                                 .degrees(showCompletedTask ? 180 : 0),
                                 axis: (x: 1, y: 0, z: 0)
                             )
-                        }
-                        .foregroundStyle(.black)
+                        Text("Completed tasks")
+                            .font(.system(size: 20))
+                        Spacer()
+                        Image(
+                            systemName: "chevron.down"
+                        )
+                        .rotation3DEffect(
+                            .degrees(showCompletedTask ? 180 : 0),
+                            axis: (x: 1, y: 0, z: 0)
+                        )
                     }
+                    .foregroundStyle(.black)
                 }
 
                 // completed tasks list
@@ -157,16 +172,16 @@ struct ContentView: View {
                                 Text("Categories")
                             }
                         }
-                        
+
                         Button {
                             // for filters
-                        } label : {
+                        } label: {
                             HStack(spacing: 0) {
                                 Image(systemName: "line.3.horizontal.decrease")
                                 Text("Filters")
                             }
                         }
-                        
+
                     } label: {
                         Image(systemName: "ellipsis")
                     }

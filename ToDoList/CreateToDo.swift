@@ -16,20 +16,29 @@ struct CreateToDo: View {
     @State private var item = TodoItem()
     
     var body: some View {
-        List {
+        VStack(spacing: 12) {
             TextField("Name", text: $item.title)
+                .padding()
+                .padding(.horizontal, 4)
+                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24))
             DatePicker("Choose a date", selection: $item.timeStamp)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
             Toggle("Important", isOn: $item.isCritical)
-            Button("Create") {
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            
+            MainButton(label: "Create", fillContainer: true, disabled: item.title.isEmpty) {
                 withAnimation {
-                    // use the context as a CRUD item
-                    // in this case, we're inserting (creating) sth
                     context.insert(item)
                 }
                 dismiss()
             }
-            .disabled(item.title.isEmpty ? true : false)
         }
+        .padding()
+        .frame(maxHeight: .infinity, alignment: .top)
         .navigationTitle("Create To Do")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {

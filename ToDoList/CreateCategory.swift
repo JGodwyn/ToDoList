@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct CreateCategory: View {
-    @Environment(\.modelContext) var categoryContext
+    @Environment(\.modelContext) var context
     @FocusState private var inputNameFocused: Bool
     @State private var noNameError: Bool = false
     @State private var attempts: Int = 0
@@ -20,7 +20,6 @@ struct CreateCategory: View {
 
     var body: some View {
         ZStack {
-
             // use this to dismiss every open menu when they're tapped beyond bounds
             Color.white.opacity(0.0001)
                 .ignoresSafeArea()
@@ -70,8 +69,7 @@ struct CreateCategory: View {
                 }
                 .padding(.bottom, 24)
                 .zIndex(100)
-                .overlay(alignment: .bottom) {
-
+                .overlay(alignment: .center) {
                     // Color menu
                     if showColorMenu {
                         VStack {
@@ -111,17 +109,23 @@ struct CreateCategory: View {
                         .padding(.horizontal, 24)
                         .frame(width: 280, height: 256)
                         .glassEffect(in: RoundedRectangle(cornerRadius: 48))
+                        .mask {
+                            RoundedRectangle(cornerRadius: 48)
+                        }
                         .padding(.bottom, 56)
-                        .transition(
-                            .move(edge: .bottom).combined(with: .blurReplace)
-                                .combined(with: .scale)
-                        )
+//                        .transition(
+//                            .move(edge: .bottom).combined(with: .blurReplace)
+//                                .combined(with: .scale)
+//                        )
+                        .transition(.blurReplace.combined(with: .scale))
+                        .shadow(color: .black.opacity(0.2), radius: 56, x: 0, y: 12)
                     }
                 }
 
                 // Buttons
                 VStack(spacing: 16) {
                     MainButton(label: "Create Category", fillContainer: true) {
+                        showColorMenu = false
                         if CategoryItem.name.isEmpty {
                             noNameError = true
                             withAnimation(.easeOut) {
@@ -133,8 +137,9 @@ struct CreateCategory: View {
                                 noNameError = false
                             }
                         } else {
-                            CategoryItem.color = CategoryColor.colorCode
-                            categoryContext.insert(CategoryItem)
+                            CategoryItem.colorCode = CategoryColor.colorCode
+                            CategoryItem.colorName = CategoryColor.colorDescription
+                            context.insert(CategoryItem)
                             tappedButton()
                         }
                     }
@@ -144,6 +149,7 @@ struct CreateCategory: View {
                         lightBtn: true,
                         fillContainer: true
                     ) {
+                        showColorMenu = false
                         tappedButton()
                     }
                 }
