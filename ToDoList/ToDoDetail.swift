@@ -18,7 +18,23 @@ struct ToDoDetail: View {
     // @Bindable affects the object itself whereas
     // @Binding affects the parent's object
     @Bindable var todoObj : TodoItem
+    @Query(sort: \Categories.created, order: .reverse) private
+        var categoriesQuery: [Categories]
     @State private var todoTemp : ToDoTemp = .example
+    @State private var selectedCategoryIDs: Set<PersistentIdentifier>
+    
+    // initialize the categories
+    init(todoObj: TodoItem) {
+        self.todoObj = todoObj
+        _selectedCategoryIDs = State(initialValue: Set(todoObj.categories.map { $0.persistentModelID }))
+        
+        // a few things going on here
+        // 1. why do we need an init() instead of something like this? @State private var selectedCategoryIDs: Set<PersistentIdentifier> = Set(todoObj(…
+        // that's an error in Swift because item don't exist when you're creating the object
+        // 2. why the '_'? this is to tell Swift that selectedCategoryIDs should point to the one outside (they should be the same object)
+        // 3. What does State(initialValue:…) mean? well that's like saying @State private var… . just like in #1, item don't exist outside yet, you need to wrap it in an init to get the value. this is because of the dependency on item.
+        
+    }
     
     var body: some View {
         VStack {
@@ -39,12 +55,45 @@ struct ToDoDetail: View {
                 .padding(.vertical, 12)
                 .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
             
+            if !categoriesQuery.isEmpty {
+                ScrollView(showsIndicators: false) {
+                    FlowLayout {
+                        ForEach(categoriesQuery) { category in
+                            Pills(
+                                name: category.name,
+                                colorCode: category.colorCode,
+                                isSelected: selectedCategoryIDs.contains(category.persistentModelID)
+                            ) {
+                                toggleSelection(category)
+                            }
+                        }
+                    }
+                    .padding(.bottom, 24)
+                }
+                .frame(height: 200)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
+                .overlay(alignment: .bottom) {
+                    VStack {
+                        
+                    }
+                    .frame(height: 40)
+                    .frame(maxWidth: .infinity)
+                    .background(BrandColors.Gray0, in: Rectangle())
+                    .padding(.bottom, 8)
+                    .blur(radius: 16, opaque: false)
+                }
+            }
+            
             MainButton(label: "Update", fillContainer: true, disabled: todoTemp.title.isEmpty) {
-                withAnimation {
+                withAnimation(.smooth(duration: 0.3)) {
                     todoObj.title = todoTemp.title
                     todoObj.timeStamp = todoTemp.timeStamp
                     todoObj.isCritical = todoTemp.isCritical
                     todoObj.isCompleted = todoTemp.isCompleted
+                    todoObj.categories = categoriesQuery.filter {
+                        selectedCategoryIDs.contains($0.persistentModelID)
+                    }
                 }
                 dismiss()
             }
@@ -67,10 +116,20 @@ struct ToDoDetail: View {
             todoTemp.isCompleted = todoObj.isCompleted
         }
     }
+    
+    private func toggleSelection(_ category: Categories) {
+        if selectedCategoryIDs.contains(category.persistentModelID) {
+            selectedCategoryIDs.remove(category.persistentModelID)
+        } else {
+            selectedCategoryIDs.insert(category.persistentModelID)
+        }
+    }
 }
 
 #Preview {
     ToDoDetail(todoObj: .init())
+    ContentView()
+        .modelContainer(for: [TodoItem.self, Categories.self])
 }
 
 
@@ -81,6 +140,7 @@ struct ToDoTemp {
     var timeStamp : Date
     var isCritical : Bool
     var isCompleted : Bool
+//    var mainCategories : [Categories]
     
     static var example : ToDoTemp {
         ToDoTemp(title: "", timeStamp: .init(), isCritical: false, isCompleted: false)

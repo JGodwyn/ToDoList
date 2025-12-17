@@ -137,7 +137,8 @@ struct ContentView: View {
             .sheet(isPresented: $showCreateSheet) {
                 NavigationStack {
                     CreateToDo()
-                        .presentationDetents([.medium])
+                        .interactiveDismissDisabled()
+//                        .presentationDetents([.medium])
                 }
             }
             .sheet(
@@ -151,7 +152,8 @@ struct ContentView: View {
                     // what should be in the sheet
                     NavigationStack {
                         ToDoDetail(todoObj: todo)
-                            .presentationDetents([.medium])
+                            .interactiveDismissDisabled()
+//                            .presentationDetents([.medium])
                     }
                 }
             )
