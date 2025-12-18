@@ -37,84 +37,87 @@ struct ToDoDetail: View {
     }
     
     var body: some View {
-        VStack {
-            TextField("Name", text: $todoTemp.title)
-                .padding()
-                .padding(.horizontal, 4)
-                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24))
-            DatePicker("Date", selection: $todoTemp.timeStamp)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-            Toggle("Important", isOn: $todoTemp.isCritical)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-            Toggle("Done with this task?", isOn: $todoTemp.isCompleted)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-            
-            if !categoriesQuery.isEmpty {
-                ScrollView(showsIndicators: false) {
-                    FlowLayout {
-                        ForEach(categoriesQuery) { category in
-                            Pills(
-                                name: category.name,
-                                colorCode: category.colorCode,
-                                isSelected: selectedCategoryIDs.contains(category.persistentModelID)
-                            ) {
-                                toggleSelection(category)
+        ScrollView(showsIndicators: false) {
+            VStack {
+                TextField("Name", text: $todoTemp.title)
+                    .padding()
+                    .padding(.horizontal, 4)
+                    .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24))
+                DatePicker("Date", selection: $todoTemp.timeStamp)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                Toggle("Important", isOn: $todoTemp.isCritical)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                Toggle("Done with this task?", isOn: $todoTemp.isCompleted)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                
+                if !categoriesQuery.isEmpty {
+                    ScrollView(showsIndicators: false) {
+                        FlowLayout {
+                            ForEach(categoriesQuery) { category in
+                                Pills(
+                                    name: category.name,
+                                    colorCode: category.colorCode,
+                                    isSelected: selectedCategoryIDs.contains(category.persistentModelID)
+                                ) {
+                                    toggleSelection(category)
+                                }
                             }
                         }
+                        .padding(.bottom, 24)
                     }
+                    .frame(height: 200)
+                    .padding(.top, 8)
                     .padding(.bottom, 24)
-                }
-                .frame(height: 200)
-                .padding(.top, 8)
-                .padding(.bottom, 24)
-                .overlay(alignment: .bottom) {
-                    VStack {
-                        
-                    }
-                    .frame(height: 40)
-                    .frame(maxWidth: .infinity)
-                    .background(BrandColors.Gray0, in: Rectangle())
-                    .padding(.bottom, 8)
-                    .blur(radius: 16, opaque: false)
-                }
-            }
-            
-            MainButton(label: "Update", fillContainer: true, disabled: todoTemp.title.isEmpty) {
-                withAnimation(.smooth(duration: 0.3)) {
-                    todoObj.title = todoTemp.title
-                    todoObj.timeStamp = todoTemp.timeStamp
-                    todoObj.isCritical = todoTemp.isCritical
-                    todoObj.isCompleted = todoTemp.isCompleted
-                    todoObj.categories = categoriesQuery.filter {
-                        selectedCategoryIDs.contains($0.persistentModelID)
+                    .overlay(alignment: .bottom) {
+                        VStack {
+                            
+                        }
+                        .frame(height: 40)
+                        .frame(maxWidth: .infinity)
+                        .background(BrandColors.Gray0, in: Rectangle())
+                        .padding(.bottom, 8)
+                        .blur(radius: 16, opaque: false)
                     }
                 }
-                dismiss()
-            }
-        }
-        .padding()
-        .frame(maxHeight: .infinity, alignment: .top)
-        .navigationTitle("Your To-do")
-        .animation(.easeOut, value: todoObj.isCompleted)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Cancel") {
+                
+                MainButton(label: "Update", fillContainer: true, disabled: todoTemp.title.isEmpty) {
+                    withAnimation(.smooth(duration: 0.3)) {
+                        todoObj.title = todoTemp.title
+                        todoObj.timeStamp = todoTemp.timeStamp
+                        todoObj.isCritical = todoTemp.isCritical
+                        todoObj.isCompleted = todoTemp.isCompleted
+                        todoObj.categories = categoriesQuery.filter {
+                            selectedCategoryIDs.contains($0.persistentModelID)
+                        }
+                    }
                     dismiss()
                 }
             }
+            .padding()
+            .frame(maxHeight: .infinity, alignment: .top)
+            .navigationTitle("Your To-do")
+            .animation(.easeOut, value: todoObj.isCompleted)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                todoTemp.title = todoObj.title
+                todoTemp.timeStamp = todoObj.timeStamp
+                todoTemp.isCritical = todoObj.isCritical
+                todoTemp.isCompleted = todoObj.isCompleted
+            }
         }
-        .onAppear {
-            todoTemp.title = todoObj.title
-            todoTemp.timeStamp = todoObj.timeStamp
-            todoTemp.isCritical = todoObj.isCritical
-            todoTemp.isCompleted = todoObj.isCompleted
-        }
+        .scrollDismissesKeyboard(.interactively)
     }
     
     private func toggleSelection(_ category: Categories) {
@@ -128,8 +131,6 @@ struct ToDoDetail: View {
 
 #Preview {
     ToDoDetail(todoObj: .init())
-    ContentView()
-        .modelContainer(for: [TodoItem.self, Categories.self])
 }
 
 
@@ -140,7 +141,6 @@ struct ToDoTemp {
     var timeStamp : Date
     var isCritical : Bool
     var isCompleted : Bool
-//    var mainCategories : [Categories]
     
     static var example : ToDoTemp {
         ToDoTemp(title: "", timeStamp: .init(), isCritical: false, isCompleted: false)

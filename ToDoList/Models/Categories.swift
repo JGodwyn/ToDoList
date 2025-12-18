@@ -15,13 +15,14 @@ final class Categories {
     var colorCode: String
     var colorName: String
     var created: Date
-    @Relationship(inverse: \TodoItem.categories) var todos: [TodoItem]? // use this to see all the tasks in a category
+    @Relationship(inverse: \TodoItem.categories) var todos: [TodoItem] = [] // use this to see all the tasks in a category
 
     init(name: String = "", colorCode: String = "#925E78", colorName: String = "Dusty Lavender", created: Date = .now) {
         self.name = name
         self.colorCode = colorCode
         self.colorName = colorName
         self.created = created
+        self.todos = []
     }
 }
 

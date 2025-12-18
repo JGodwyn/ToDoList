@@ -64,7 +64,7 @@ struct ContentView: View {
                         Button(role: .destructive) {
                             withAnimation {
                                 context.delete(item)
-                                try? context.save()  // add this to persist storage immediately
+                                try? context.save()  // add this to persistent storage immediately
                             }
                         } label: {
                             Image(systemName: "trash")
