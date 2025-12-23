@@ -17,6 +17,7 @@ struct CreateToDo: View {
         var categoriesQuery: [Categories]
     @State private var item = TodoItem()
     @State private var selectedCategoryIDs: Set<PersistentIdentifier> = []  // IDs of all selected categories
+    let tappedCreateButton : () -> Void
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -94,6 +95,7 @@ struct CreateToDo: View {
                     }
                     withAnimation {
                         context.insert(item)
+                        tappedCreateButton()
                     }
                     dismiss()
                 }
@@ -123,6 +125,6 @@ struct CreateToDo: View {
 }
 
 #Preview {
-    CreateToDo()
+    CreateToDo() {}
         .modelContainer(for: TodoItem.self)
 }

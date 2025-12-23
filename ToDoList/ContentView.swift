@@ -18,25 +18,16 @@ struct ContentView: View {
     @State private var showSearchBar : Bool = false
     @State private var selectedTodo: TodoItem?
     @Query private var todoQuery: [TodoItem]
-    // query fetches the content of model. in this case i specified that it's an array of TodoItem objects.
-    // whenever the content of the model changes, this is auto re-rendered
-    // this is interesting because you can have multiple queries that do different things as below
-
-    // add a filter based on which one has isCompleted set to false
-    // i.e the undone tasks
-    // i can also specify the order to sort
     @Query(
         filter: #Predicate { $0.isCompleted == false },
         sort: \TodoItem.timeStamp,
         order: .forward
     ) private var ongoingTodos: [TodoItem]
-
     // the opposite of above
     @Query(
         filter: #Predicate { $0.isCompleted == true },
         sort: \TodoItem.timeStamp
     ) private var completedTodos: [TodoItem]
-
     @Query(sort: \Categories.created, order: .reverse) private
         var categoriesQuery: [Categories]
 
@@ -47,6 +38,7 @@ struct ContentView: View {
                     completedTaskList()
                 } else {
                     ongoingTaskList()
+                    
                 }
             }
             .listStyle(.grouped)
@@ -58,11 +50,14 @@ struct ContentView: View {
                 )
             )
             .animation(.smooth(duration: 0.1), value: ongoingTodos)
+            .animation(.smooth(duration: 0.1), value: completedTodos)
             .animation(.smooth(duration: 0.1), value: showCompletedTask)
             .animation(.smooth(duration: 0.1), value: searchQuery)
+            .animation(.smooth(duration: 0.1), value: searchOngoingTodos)
+            .animation(.smooth(duration: 0.1), value: searchCompletedTodos)
             .sheet(isPresented: $showCreateSheet) {
                 NavigationStack {
-                    CreateToDo()
+                    CreateToDo() { showCompletedTask = false }
                         .interactiveDismissDisabled()
                 }
             }
@@ -177,49 +172,37 @@ struct ContentView: View {
                 }
             }
             .overlay(alignment: .bottomTrailing) {
-                ZStack {
-                    VStack {
-                        HStack {
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 20))
-                                .foregroundStyle(BrandColors.Gray500)
-                            TextField("Search task or category here", text: $searchQuery)
-                        }
-                        .padding()
-                        .padding(.horizontal, 2)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
-                        .background(
-                            RoundedRectangle(cornerRadius: .infinity, style: .continuous)
-                                .fill(BrandColors.Gray0)
-                                .shadow(color: BrandColors.Gray200, radius: 16)
-                        )
-                        .padding(.horizontal, 20)
+                if showCompletedTask == false {
+                    // when you're on ongoing task
+                    if !searchQuery.isEmpty || !searchOngoingTodos.isEmpty {
+                        searchBar
+                            .transition(.move(edge: .bottom).combined(with: .blurReplace))
                     }
-                    .frame(height: 88)
                 }
-                .ignoresSafeArea()
-                .background {
-                    Rectangle()
-                        .fill(.white)
-                        .mask {
-                            LinearGradient(
-                                gradient: Gradient(stops: [
-                                    .init(color: .clear, location: 0),
-                                    .init(color: .black, location: 0.3),
-                                    .init(color: .black, location: 1)
-                                ]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        }
-                        .ignoresSafeArea()
+                
+                if showCompletedTask == true {
+                    // when you're on completed task
+                    if !searchQuery.isEmpty || !searchCompletedTodos.isEmpty {
+                        searchBar
+                            .transition(.move(edge: .bottom).combined(with: .blurReplace))
+                    }
                 }
-                .frame(height: 64)
+            }
+            .overlay {
+                // show the empty states
+                if searchQuery.isEmpty {
+                    if showCompletedTask == false && searchOngoingTodos.isEmpty {
+                        emptyStateView(description: "You have no ongoing tasks", showButton: true)
+                    }
+                    
+                    if showCompletedTask == true && searchCompletedTodos.isEmpty {
+                        emptyStateView(description: "No completed tasks", image: "checkmark.circle.fill")
+                    }
+                }
             }
         }
     }
-
+    
     private var searchOngoingTodos: [TodoItem] {
         guard !searchQuery.isEmpty else {
             return ongoingTodos
@@ -264,24 +247,26 @@ struct ContentView: View {
 
     // with ViewBuilder, you can return different types of views
     @ViewBuilder
-    private func completedTaskList() -> some View {
-        if completedTodos.isEmpty {
-            VStack(spacing: 8) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(BrandColors.Gray400)
-                Text("Completed tasks will show up here")
-                    .font(.system(size: 17))
-                    .foregroundStyle(BrandColors.Gray400)
-                    .padding(8)
+    private func emptyStateView(description: String, image: String = "tray.full.fill", showButton: Bool = false) -> some View {
+        VStack(alignment: .center, spacing: 12) {
+            Image(systemName: image)
+                .font(.system(size: 32))
+                .foregroundStyle(BrandColors.Gray400)
+            Text(description)
+                .font(.system(size: 17))
+                .foregroundStyle(BrandColors.Gray400)
+            
+            if showButton {
+                MainButton(label: "Add a task", height: 32) {
+                    showCreateSheet.toggle()
+                }
+                .padding(8)
             }
-            .frame(
-                maxWidth: .infinity,
-                alignment: .init(horizontal: .center, vertical: .center)
-            )
-            .frame(minHeight: 256)
         }
-        
+    }
+    
+    @ViewBuilder
+    private func completedTaskList() -> some View {
         ForEach(searchCompletedTodos) { item in
             ToDoCard(todoObj: item)
                 .buttonStyle(PlainButtonStyle())
@@ -290,6 +275,7 @@ struct ContentView: View {
                         withAnimation {
                             context.delete(item)
                         }
+                        try? context.save() // add this to persistent storage immediately
                     } label: {
                         Image(systemName: "trash")
                     }
@@ -309,28 +295,6 @@ struct ContentView: View {
 
     @ViewBuilder
     private func ongoingTaskList() -> some View {
-        // ongoing tasks list
-        if ongoingTodos.isEmpty {
-            VStack(spacing: 12) {
-                Image(systemName: "tray.full.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(BrandColors.Gray400)
-                Text("You have no ongoing tasks")
-                    .font(.system(size: 17))
-                    .foregroundStyle(BrandColors.Gray400)
-                MainButton(label: "Add a task", height: 32) {
-                    showCreateSheet.toggle()
-                }
-                .padding(8)
-            }
-            .frame(
-                maxWidth: .infinity,
-                alignment: .init(horizontal: .center, vertical: .center)
-            )
-            .frame(minHeight: 256)
-            .transition(.opacity)
-        }
-
         ForEach(searchOngoingTodos) { item in
             Button {
                 selectedTodo = item
@@ -342,8 +306,9 @@ struct ContentView: View {
                 Button(role: .destructive) {
                     withAnimation {
                         context.delete(item)
-                        try? context.save()  // add this to persistent storage immediately
                     }
+                    try? context.save()  // add this to persistent storage immediately
+                    
                 } label: {
                     Image(systemName: "trash")
                 }
@@ -390,6 +355,48 @@ struct ContentView: View {
             }
             .foregroundStyle(.black)
         }
+    }
+    
+    private var searchBar : some View {
+        ZStack {
+            VStack {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 20))
+                        .foregroundStyle(BrandColors.Gray500)
+                    TextField("Search task or category here", text: $searchQuery)
+                }
+                .padding()
+                .padding(.horizontal, 2)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(
+                    RoundedRectangle(cornerRadius: .infinity, style: .continuous)
+                        .fill(BrandColors.Gray0)
+                        .shadow(color: BrandColors.Gray200, radius: 16)
+                )
+                .padding(.horizontal, 20)
+            }
+            .frame(height: 88)
+        }
+        .ignoresSafeArea()
+        .background {
+            Rectangle()
+                .fill(.white)
+                .mask {
+                    LinearGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .black, location: 0.3),
+                            .init(color: .black, location: 1)
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+                .ignoresSafeArea()
+        }
+        .frame(height: 64)
     }
 }
 
