@@ -88,7 +88,7 @@ struct AllCategories: View {
         .navigationDestination(isPresented: $navigateToCategorizedTask) {
             CategorizedTask(categoryObj: categorizedTaskToNavigate)
         }
-        .navigationTitle("Categories")
+    .navigationTitle("\(categoriesQuery.count) Categories")
         .sheet(
             item: $selectedCategory,
             onDismiss: {

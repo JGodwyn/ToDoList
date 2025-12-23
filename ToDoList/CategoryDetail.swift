@@ -14,7 +14,6 @@ struct CategoryDetail: View {
     @Bindable var categoryObj: Categories
     @State private var showColorMenu: Bool = false
     @State private var tempCategory: tempCategory = .example
-//    @State private var navigateToCategorizedTask: Bool = false
     @FocusState private var inputNameFocused: Bool
     
     let tappedViewCategory : () -> Void

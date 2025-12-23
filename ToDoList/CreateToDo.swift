@@ -28,7 +28,7 @@ struct CreateToDo: View {
                         BrandColors.Gray50,
                         in: RoundedRectangle(cornerRadius: 24)
                     )
-                DatePicker("Choose a date", selection: $item.timeStamp)
+                DatePicker("Date", selection: $item.timeStamp)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .background(
