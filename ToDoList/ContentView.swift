@@ -17,17 +17,18 @@ struct ContentView: View {
     @State private var navigationTitle: String = ""
     @State private var showSearchBar : Bool = false
     @State private var selectedTodo: TodoItem?
+    @State private var sortTasksBy : sortableFields = .timeStamp
     @Query private var todoQuery: [TodoItem]
+    
     @Query(
-        filter: #Predicate { $0.isCompleted == false },
-        sort: \TodoItem.timeStamp,
-        order: .forward
+        filter: #Predicate<TodoItem> { $0.isCompleted == false }
     ) private var ongoingTodos: [TodoItem]
+    
     // the opposite of above
     @Query(
-        filter: #Predicate { $0.isCompleted == true },
-        sort: \TodoItem.timeStamp
+        filter: #Predicate<TodoItem> { $0.isCompleted == true }
     ) private var completedTodos: [TodoItem]
+    
     @Query(sort: \Categories.created, order: .reverse) private
         var categoriesQuery: [Categories]
 
@@ -53,8 +54,9 @@ struct ContentView: View {
             .animation(.smooth(duration: 0.1), value: completedTodos)
             .animation(.smooth(duration: 0.1), value: showCompletedTask)
             .animation(.smooth(duration: 0.1), value: searchQuery)
-            .animation(.smooth(duration: 0.1), value: searchOngoingTodos)
-            .animation(.smooth(duration: 0.1), value: searchCompletedTodos)
+            .animation(.smooth(duration: 0.1), value: sortTasksBy)
+//            .animation(.smooth(duration: 0.1), value: searchOngoingTodos)
+//            .animation(.smooth(duration: 0.1), value: searchCompletedTodos)
             .sheet(isPresented: $showCreateSheet) {
                 NavigationStack {
                     CreateToDo() { showCompletedTask = false }
@@ -111,13 +113,26 @@ struct ContentView: View {
                                 Text("Categories")
                             }
                         }
-
+                        
+                        Menu {
+                            Picker("Sort by...", selection: $sortTasksBy) {
+                                ForEach(sortableFields.allCases, id: \.self) { item in
+                                    Text(item.name)
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 0) {
+                                Image(systemName: "arrow.up.arrow.down")
+                                Text("Sort by...")
+                            }
+                        }
+                        
                         Button {
                             // for filters
                         } label: {
                             HStack(spacing: 0) {
                                 Image(systemName: "line.3.horizontal.decrease")
-                                Text("Filters")
+                                Text("Filter")
                             }
                         }
 
@@ -267,7 +282,7 @@ struct ContentView: View {
     
     @ViewBuilder
     private func completedTaskList() -> some View {
-        ForEach(searchCompletedTodos) { item in
+        ForEach(searchCompletedTodos.sortItems(using: sortTasksBy)) { item in
             ToDoCard(todoObj: item)
                 .buttonStyle(PlainButtonStyle())
                 .swipeActions {
@@ -295,7 +310,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private func ongoingTaskList() -> some View {
-        ForEach(searchOngoingTodos) { item in
+        ForEach(searchOngoingTodos.sortItems(using: sortTasksBy)) { item in
             Button {
                 selectedTodo = item
             } label: {
@@ -398,6 +413,7 @@ struct ContentView: View {
         }
         .frame(height: 64)
     }
+    
 }
 
 #Preview {
