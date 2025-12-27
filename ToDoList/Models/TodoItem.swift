@@ -35,11 +35,13 @@ final class TodoItem {
     }
 }
 
-enum sortableFields : CaseIterable {
-    case title
-    case timeStamp
-    case isCritical
-    case categoryCount
+enum SortableFields : String, CaseIterable, Identifiable {
+    
+    var id : Self { self }
+    case title = "Title"
+    case timeStamp = "Date"
+    case isCritical = "Importance"
+    case categoryCount = "Number of Categories"
     
     var name : String {
         switch self {
@@ -53,7 +55,7 @@ enum sortableFields : CaseIterable {
 
 // this handles the sorting
 extension [TodoItem] {
-     func sortItems(using sortValue: sortableFields) -> [TodoItem] {
+     func sortItems(using sortValue: SortableFields) -> [TodoItem] {
         switch sortValue {
         case .title:
             return sorted(by: { $0.title.lowercased() < $1.title.lowercased() })

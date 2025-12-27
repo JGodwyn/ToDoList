@@ -11,13 +11,14 @@ import SwiftUI
 struct ContentView: View {
 
     @Environment(\.modelContext) var context
+    @AppStorage("TaskSortValue") private var sortTasksBy : SortableFields = .timeStamp
+    
     @State private var showCreateSheet: Bool = false
     @State private var showCompletedTask: Bool = false
     @State private var searchQuery: String = ""
     @State private var navigationTitle: String = ""
     @State private var showSearchBar : Bool = false
     @State private var selectedTodo: TodoItem?
-    @State private var sortTasksBy : sortableFields = .timeStamp
     @Query private var todoQuery: [TodoItem]
     
     @Query(
@@ -116,7 +117,7 @@ struct ContentView: View {
                         
                         Menu {
                             Picker("Sort by...", selection: $sortTasksBy) {
-                                ForEach(sortableFields.allCases, id: \.self) { item in
+                                ForEach(SortableFields.allCases) { item in
                                     Text(item.name)
                                 }
                             }
