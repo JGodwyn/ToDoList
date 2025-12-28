@@ -5,23 +5,26 @@
 //  Created by Gdwn16 on 03/12/2025.
 //
 
+import PhotosUI  // lets you pick a photo stored on your device
 import SwiftData
 import SwiftUI
 
 struct CreateToDo: View {
 
-    @Environment(\.dismiss) var dismiss  // to close the sheet
-    @Environment(\.modelContext) var context  // object you use to create, insert, delete, and save to your model
-    // remember that you passed the model object via ModelContainer on the root file (ToDoListApp). this way, this object is available to any view that wants it
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.modelContext) var context
     @Query(sort: \Categories.created, order: .reverse) private
         var categoriesQuery: [Categories]
     @State private var item = TodoItem()
-    @State private var selectedCategoryIDs: Set<PersistentIdentifier> = []  // IDs of all selected categories
-    let tappedCreateButton : () -> Void
+    @State private var selectedCategoryIDs: Set<PersistentIdentifier> = []
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var photoIsSelected : Bool = false
+
+    let tappedCreateButton: () -> Void
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
                 TextField("Name", text: $item.title)
                     .padding()
                     .padding(.horizontal, 4)
@@ -34,15 +37,85 @@ struct CreateToDo: View {
                     .padding(.vertical, 12)
                     .background(
                         BrandColors.Gray50,
-                        in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        in: RoundedRectangle(
+                            cornerRadius: 24,
+                            style: .continuous
+                        )
                     )
                 Toggle("Important", isOn: $item.isCritical)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .background(
                         BrandColors.Gray50,
-                        in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        in: RoundedRectangle(
+                            cornerRadius: 24,
+                            style: .continuous
+                        )
                     )
+                
+                // photo picker
+                HStack {
+                    PhotosPicker(
+                        selection: $selectedPhoto,
+                        matching: .images,
+                        photoLibrary: .shared()
+                    ) {
+                        HStack {
+                            Image(
+                                systemName: item.image == nil
+                                    ? "plus" : "pencil"
+                            )
+                            Text(
+                                item.image == nil
+                                    ? "Tap to add photo" : "Change photo"
+                            )
+                            .fontWeight(.medium)
+                        }
+                        .foregroundStyle(
+                            item.image == nil ? .gray : BrandColors.BrandMain
+                        )
+
+                    }
+                    Spacer()
+                    if let imageData = item.image,
+                        let uiImage = UIImage(data: imageData)
+                    {
+                        HStack(spacing: 12) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .frame(width: 56, height: 40)
+                                .clipShape(
+                                    RoundedRectangle(
+                                        cornerRadius: 8,
+                                        style: .continuous
+                                    )
+                                )
+
+                            if photoIsSelected {
+                                Button {
+                                    selectedPhoto = nil
+                                    item.image = nil
+                                    withAnimation(.smooth(duration: 0.3)) {
+                                        photoIsSelected = false
+                                    }
+                                } label: {
+                                    Image(systemName: "trash.circle.fill")
+                                        .font(.system(size: 32))
+                                        .foregroundStyle(.red)
+                                }
+                                .transition(.blurReplace.combined(with: .opacity))
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .frame(height: 52)
+                .background(
+                    BrandColors.Gray50,
+                    in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+                )
+
                 if !categoriesQuery.isEmpty {
                     VStack(alignment: .leading) {
                         Text("Where do these fall under?")
@@ -54,9 +127,10 @@ struct CreateToDo: View {
                                     Pills(
                                         name: category.name,
                                         colorCode: category.colorCode,
-                                        isSelected: selectedCategoryIDs.contains(
-                                            category.persistentModelID
-                                        )
+                                        isSelected:
+                                            selectedCategoryIDs.contains(
+                                                category.persistentModelID
+                                            )
                                     ) {
                                         toggleSelection(category)
                                     }
@@ -69,7 +143,7 @@ struct CreateToDo: View {
                         .padding(.bottom, 24)
                         .overlay(alignment: .bottom) {
                             VStack {
-                                
+
                             }
                             .frame(height: 40)
                             .frame(maxWidth: .infinity)
@@ -81,10 +155,13 @@ struct CreateToDo: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         BrandColors.Gray0,
-                        in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        in: RoundedRectangle(
+                            cornerRadius: 24,
+                            style: .continuous
+                        )
                     )
                 }
-                
+
                 MainButton(
                     label: "Create",
                     fillContainer: true,
@@ -110,8 +187,22 @@ struct CreateToDo: View {
                     }
                 }
             }
+            .task(id: selectedPhoto) {
+                // what should happen when id changes?
+                if let data = try? await selectedPhoto?.loadTransferable(
+                    type: Data.self
+                ) {
+                    item.image = data
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        withAnimation(.smooth(duration: 0.3)) {
+                            photoIsSelected = true
+                        }
+                    }
+                }
+            }
         }
         .scrollDismissesKeyboard(.interactively)
+        .animation(.smooth(duration: 0.2), value: item.image)
     }
 
     // check whether the selected category exists in the set
@@ -125,6 +216,6 @@ struct CreateToDo: View {
 }
 
 #Preview {
-    CreateToDo() {}
+    CreateToDo {}
         .modelContainer(for: TodoItem.self)
 }

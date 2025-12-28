@@ -10,10 +10,14 @@ import SwiftData
 
 @main
 struct ToDoListApp: App {
+    
+    @AppStorage("FirstTimeUsingTheApp") private var isFirstTimeUsingTheApp: Bool = true
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .modelContainer(for: [TodoItem.self, Categories.self])
+                .modelContainer(AppModelContainer.create(createDefaults: &isFirstTimeUsingTheApp))
+            //                .modelContainer(for: [TodoItem.self, Categories.self])
         }
     }
 }

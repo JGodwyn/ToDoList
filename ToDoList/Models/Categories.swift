@@ -26,6 +26,24 @@ final class Categories {
     }
 }
 
+extension Categories {
+    // create default categories — Health, Urgent, Career, Pending
+    // this would be loaded the first time the app is created
+    static var defaultHealthUrgent : [Categories] {
+        [
+            .init(name: "Health", colorCode: "#00A676", colorName: "Jungle Green"),
+            .init(name: "Urgent", colorCode: "#F05365", colorName: "Bubblegum Pink")
+        ]
+    }
+    
+    static var defaultCareerPending : [Categories] {
+        [
+            .init(name: "Career", colorCode: "#00A6ED", colorName: "Fresh Sky"),
+            .init(name: "Pending", colorCode: "#F4FF52", colorName: "Canary Yellow")
+        ]
+    }
+}
+
 enum CategoryColors: CaseIterable {
     case DustyLavender,
         BubblegumPink,

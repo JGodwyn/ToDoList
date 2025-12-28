@@ -19,6 +19,7 @@ final class TodoItem {
     var isCritical: Bool
     var isCompleted: Bool
     var categories : [Categories]
+    var image: Data? // there's a data type
 
     init(
         title: String = "",
@@ -32,6 +33,15 @@ final class TodoItem {
         self.isCritical = isCritical
         self.isCompleted = isCompleted
         self.categories = categories
+    }
+}
+
+extension TodoItem {
+    static var defaultTask: [TodoItem] {
+        [
+            TodoItem(title: "Eat your vegetables", isCritical: true, isCompleted: false, categories: Categories.defaultHealthUrgent),
+            TodoItem(title: "Review your career goals", isCritical: false, isCompleted: false, categories: Categories.defaultCareerPending)
+        ]
     }
 }
 
