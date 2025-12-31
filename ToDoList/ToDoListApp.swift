@@ -8,6 +8,8 @@
 import SwiftUI
 import SwiftData
 
+// skipped learning migrations until later
+
 @main
 struct ToDoListApp: App {
     

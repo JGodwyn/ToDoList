@@ -5,9 +5,10 @@
 //  Created by Gdwn16 on 03/12/2025.
 //
 
-import PhotosUI  // lets you pick a photo stored on your device
 import SwiftData
 import SwiftUI
+import SwiftUIImageViewer
+import PhotosUI  // lets you pick a photo stored on your device
 
 struct CreateToDo: View {
 
@@ -18,7 +19,8 @@ struct CreateToDo: View {
     @State private var item = TodoItem()
     @State private var selectedCategoryIDs: Set<PersistentIdentifier> = []
     @State private var selectedPhoto: PhotosPickerItem?
-    @State private var photoIsSelected : Bool = false
+    @State private var photoIsSelected: Bool = false
+    @State private var isImagePresented: Bool = false
 
     let tappedCreateButton: () -> Void
 
@@ -52,7 +54,7 @@ struct CreateToDo: View {
                             style: .continuous
                         )
                     )
-                
+
                 // photo picker
                 HStack {
                     PhotosPicker(
@@ -90,6 +92,28 @@ struct CreateToDo: View {
                                         style: .continuous
                                     )
                                 )
+                                .onTapGesture {
+                                    withAnimation(.smooth(duration: 0.3)) {
+                                        isImagePresented = true
+                                    }
+                                }
+                                .fullScreenCover(isPresented: $isImagePresented) {
+                                    SwiftUIImageViewer(image: Image(uiImage: uiImage))
+                                        .overlay(alignment: .topTrailing) {
+                                            Button {
+                                                withAnimation(.smooth(duration: 0.3)) {
+                                                    isImagePresented = false
+                                                }
+                                            } label: {
+                                                Image(systemName: "xmark")
+                                                    .font(.headline)
+                                            }
+                                            .buttonStyle(.bordered)
+                                            .clipShape(Circle())
+                                            .tint(BrandColors.BrandMain)
+                                            .padding()
+                                        }
+                                }
 
                             if photoIsSelected {
                                 Button {
@@ -103,7 +127,9 @@ struct CreateToDo: View {
                                         .font(.system(size: 32))
                                         .foregroundStyle(.red)
                                 }
-                                .transition(.blurReplace.combined(with: .opacity))
+                                .transition(
+                                    .blurReplace.combined(with: .opacity)
+                                )
                             }
                         }
                     }
@@ -187,21 +213,19 @@ struct CreateToDo: View {
                     }
                 }
             }
-            .task(id: selectedPhoto) {
-                // what should happen when id changes?
-                if let data = try? await selectedPhoto?.loadTransferable(
-                    type: Data.self
-                ) {
-                    item.image = data
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        withAnimation(.smooth(duration: 0.3)) {
-                            photoIsSelected = true
-                        }
-                    }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .task(id: selectedPhoto) {
+            // what should happen when id changes?
+            if let data = try? await selectedPhoto?.loadTransferable(
+                type: Data.self
+            ) {
+                item.image = data
+                withAnimation(.smooth(duration: 0.3).delay(0.5)) {
+                    photoIsSelected = true
                 }
             }
         }
-        .scrollDismissesKeyboard(.interactively)
         .animation(.smooth(duration: 0.2), value: item.image)
     }
 

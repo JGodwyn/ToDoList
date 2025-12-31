@@ -9,6 +9,10 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+
+// you can add computed properties to your models also
+// computed properties are also not persisted in memory (they're transient)
+
 @Model
 final class Categories {
     var name: String
@@ -16,13 +20,19 @@ final class Categories {
     var colorName: String
     var created: Date
     @Relationship(inverse: \TodoItem.categories) var todos: [TodoItem] = [] // use this to see all the tasks in a category
+    
+    // just to illustrate that transient is not persisted in memory
+    // you can liken it to a @State property
+    @Transient
+    var categoryViewCount : Int = 0
 
-    init(name: String = "", colorCode: String = "#925E78", colorName: String = "Dusty Lavender", created: Date = .now) {
+    init(name: String = "", colorCode: String = "#925E78", colorName: String = "Dusty Lavender", created: Date = .now, categoryViewCount: Int = 0) {
         self.name = name
         self.colorCode = colorCode
         self.colorName = colorName
         self.created = created
         self.todos = []
+        self.categoryViewCount = 0
     }
 }
 

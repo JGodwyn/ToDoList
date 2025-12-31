@@ -11,6 +11,7 @@ import SwiftData
 // using SwiftData instead of our typical struct model
 // items in swiftData tend to persist when you close the app
 // when working with SwiftData, your models need to be represented as classes not structs
+// you can add computed properties to your models also
 
 @Model
 final class TodoItem {
@@ -19,6 +20,14 @@ final class TodoItem {
     var isCritical: Bool
     var isCompleted: Bool
     var categories : [Categories]
+    
+    var categoryCount : Int {
+        self.categories.count
+        // this is not necessary but helps to understand computed properties
+        // this essentially works like @Transient properties as they are not stored in memory
+    }
+    
+    @Attribute(.externalStorage) // store this data outside your main database, you only just reference it. much better memory control and performance
     var image: Data? // there's a data type
 
     init(

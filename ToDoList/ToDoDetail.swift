@@ -7,6 +7,8 @@
 
 import SwiftUI
 import SwiftData
+import PhotosUI
+import SwiftUIImageViewer
 
 struct ToDoDetail: View {
     
@@ -22,6 +24,9 @@ struct ToDoDetail: View {
         var categoriesQuery: [Categories]
     @State private var todoTemp : ToDoTemp = .example
     @State private var selectedCategoryIDs: Set<PersistentIdentifier>
+    @State private var selectedPhoto : PhotosPickerItem?
+    @State private var photoIsSelected : Bool = false
+    @State private var isImagePresented : Bool = false
     
     // initialize the categories
     init(todoObj: TodoItem) {
@@ -51,6 +56,94 @@ struct ToDoDetail: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .background(BrandColors.Gray50, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                
+                HStack {
+                    PhotosPicker(
+                        selection: $selectedPhoto,
+                        matching: .images,
+                        photoLibrary: .shared()
+                    ) {
+                        HStack {
+                            Image(
+                                systemName: todoTemp.image == nil
+                                    ? "plus" : "pencil"
+                            )
+                            Text(
+                                todoTemp.image == nil
+                                    ? "Tap to add photo" : "Change photo"
+                            )
+                            .fontWeight(.medium)
+                        }
+                        .foregroundStyle(
+                            todoTemp.image == nil ? .gray : BrandColors.BrandMain
+                        )
+
+                    }
+                    
+                    Spacer()
+                    
+                    if let imageData = todoTemp.image,
+                        let uiImage = UIImage(data: imageData)
+                    {
+                        HStack(spacing: 12) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .frame(width: 56, height: 40)
+                                .clipShape(
+                                    RoundedRectangle(
+                                        cornerRadius: 8,
+                                        style: .continuous
+                                    )
+                                )
+                                .onTapGesture {
+                                    withAnimation(.smooth(duration: 0.3)) {
+                                        isImagePresented = true
+                                    }
+                                }
+                                .fullScreenCover(isPresented: $isImagePresented) {
+                                    SwiftUIImageViewer(image: Image(uiImage: uiImage))
+                                        .overlay(alignment: .topTrailing) {
+                                            Button {
+                                                withAnimation(.smooth(duration: 0.3)) {
+                                                    isImagePresented = false
+                                                }
+                                            } label: {
+                                                Image(systemName: "xmark")
+                                                    .font(.headline)
+                                            }
+                                            .buttonStyle(.bordered)
+                                            .clipShape(Circle())
+                                            .tint(BrandColors.BrandMain)
+                                            .padding()
+                                        }
+                                }
+
+                            if photoIsSelected {
+                                Button {
+                                    selectedPhoto = nil
+                                    todoTemp.image = nil
+                                    withAnimation(.smooth(duration: 0.3)) {
+                                        photoIsSelected = false
+                                    }
+                                } label: {
+                                    Image(systemName: "trash.circle.fill")
+                                        .font(.system(size: 32))
+                                        .foregroundStyle(.red)
+                                }
+                                .transition(.blurReplace.combined(with: .opacity))
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .frame(height: 52)
+                .background(
+                    BrandColors.Gray50,
+                    in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+                )
+                
+                
                 Toggle("Done with this task?", isOn: $todoTemp.isCompleted)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
@@ -58,6 +151,7 @@ struct ToDoDetail: View {
                 
                 if !categoriesQuery.isEmpty {
                     ScrollView(showsIndicators: false) {
+//                        Text("\(todoObj.categoryCount)") // you can use it like this
                         FlowLayout {
                             ForEach(categoriesQuery) { category in
                                 Pills(
@@ -95,6 +189,7 @@ struct ToDoDetail: View {
                         todoObj.categories = categoriesQuery.filter {
                             selectedCategoryIDs.contains($0.persistentModelID)
                         }
+                        todoObj.image = todoTemp.image
                     }
                     dismiss()
                 }
@@ -110,14 +205,33 @@ struct ToDoDetail: View {
                     }
                 }
             }
-            .onAppear {
-                todoTemp.title = todoObj.title
-                todoTemp.timeStamp = todoObj.timeStamp
-                todoTemp.isCritical = todoObj.isCritical
-                todoTemp.isCompleted = todoObj.isCompleted
-            }
         }
         .scrollDismissesKeyboard(.interactively)
+        .onAppear {
+            todoTemp.title = todoObj.title
+            todoTemp.timeStamp = todoObj.timeStamp
+            todoTemp.isCritical = todoObj.isCritical
+            todoTemp.isCompleted = todoObj.isCompleted
+            todoTemp.image = todoObj.image
+            
+            // if there's a photo when the view shows
+            if todoObj.image != nil {
+                photoIsSelected = true
+            }
+        }
+        .task(id: selectedPhoto) {
+            // if this changes
+            if let data = try? await selectedPhoto?.loadTransferable(
+                type: Data.self
+            ) {
+                todoTemp.image = data
+                withAnimation(.smooth(duration: 0.3).delay(0.5)) {
+                    photoIsSelected = true
+                }
+            }
+            
+        }
+        .animation(.smooth(duration: 0.2), value: todoTemp.image)
     }
     
     private func toggleSelection(_ category: Categories) {
@@ -141,8 +255,9 @@ struct ToDoTemp {
     var timeStamp : Date
     var isCritical : Bool
     var isCompleted : Bool
+    var image : Data?
     
     static var example : ToDoTemp {
-        ToDoTemp(title: "", timeStamp: .init(), isCritical: false, isCompleted: false)
+        ToDoTemp(title: "", timeStamp: .init(), isCritical: false, isCompleted: false, image: nil)
     }
 }

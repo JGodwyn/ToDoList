@@ -7,10 +7,12 @@
 
 import SwiftData
 import SwiftUI
+import SwiftUIImageViewer
 
 struct ToDoCard: View {
 
     let todoObj: TodoItem
+    @State private var isImagePresented : Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -34,15 +36,58 @@ struct ToDoCard: View {
                     )
                 )
             }
-
-            Text(todoObj.title)
-                .font(.system(size: 22, weight: .bold))
-                .multilineTextAlignment(.leading)
-            Text(
-                todoObj.timeStamp,
-                format: Date.FormatStyle(date: .abbreviated)
-            )
-            .foregroundStyle(BrandColors.Gray500)
+            
+            HStack (alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(todoObj.title)
+                        .font(.system(size: 22, weight: .bold))
+                        .multilineTextAlignment(.leading)
+                    Text(
+                        todoObj.timeStamp,
+                        format: Date.FormatStyle(date: .abbreviated)
+                    )
+                    .foregroundStyle(BrandColors.Gray500)
+                }
+                
+                Spacer()
+                
+                // image
+                if let imageData = todoObj.image,
+                    let uiImage = UIImage(data: imageData)
+                {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .frame(width: 40, height: 40)
+                        .clipShape(
+                            RoundedRectangle(
+                                cornerRadius: 8,
+                                style: .continuous
+                            )
+                        )
+                        .onTapGesture {
+                            withAnimation(.smooth(duration: 0.3)) {
+                                isImagePresented = true
+                            }
+                        }
+                        .fullScreenCover(isPresented: $isImagePresented) {
+                            SwiftUIImageViewer(image: Image(uiImage: uiImage))
+                                .overlay(alignment: .topTrailing) {
+                                    Button {
+                                        withAnimation(.smooth(duration: 0.3)) {
+                                            isImagePresented = false
+                                        }
+                                    } label: {
+                                        Image(systemName: "xmark")
+                                            .font(.headline)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .clipShape(Circle())
+                                    .tint(BrandColors.BrandMain)
+                                    .padding()
+                                }
+                        }
+                }
+            }
             
             // all categories
             if !todoObj.categories.isEmpty {
@@ -116,12 +161,17 @@ struct ToDoCard: View {
 }
 
 #Preview {
-    ToDoCard(
-        todoObj: TodoItem(
-            title: "This is the long name of a card",
-            timeStamp: .now,
-            isCritical: true,
-            isCompleted: true
+    VStack {
+        ToDoCard(
+            todoObj: TodoItem(
+                title: "This is the long name of a card",
+                timeStamp: .now,
+                isCritical: true,
+                isCompleted: true
+            )
         )
-    )
+    }
+    .padding(.vertical, 32)
+    .padding(.horizontal, 12)
+    .background(.gray)
 }
