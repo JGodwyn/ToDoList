@@ -139,11 +139,12 @@ struct CreateCategory: View {
                         } else {
                             CategoryItem.colorCode = CategoryColor.colorCode
                             CategoryItem.colorName = CategoryColor.colorDescription
-                            DispatchQueue.main.asyncAfter(
-                                deadline: .now() + 0.5
-                            ) {
+                            Task {
+                                try? await Task.sleep(for: .seconds(0.5))
+                                // Short delay for sheet to close so users can see the animation
                                 context.insert(CategoryItem)
                             }
+                            
                             tappedButton()
                         }
                     }
