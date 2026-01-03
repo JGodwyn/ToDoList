@@ -14,7 +14,6 @@ struct CategorizedTask: View {
     @State private var showCount : Int = 0
     
     var body: some View {
-        NavigationStack {
             VStack(alignment: .leading) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -74,7 +73,7 @@ struct CategorizedTask: View {
                 // had to pass this to a @State property cos
                 // Swift don't update the values of transient properties...for now
             }
-        }
+        
     }
 }
 

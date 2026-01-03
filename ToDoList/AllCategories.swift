@@ -11,6 +11,7 @@ import SwiftUI
 struct AllCategories: View {
 
     @Environment(\.modelContext) var context
+    @Environment(\.dismiss) var dismiss
     @Query(sort: \Categories.created, order: .reverse) private
         var categoriesQuery: [Categories]
     @State private var presentCreateSheet: Bool = false
@@ -88,20 +89,19 @@ struct AllCategories: View {
         .navigationDestination(isPresented: $navigateToCategorizedTask) {
             CategorizedTask(categoryObj: categorizedTaskToNavigate)
         }
-    .navigationTitle("\(categoriesQuery.count) Categories")
+        .navigationTitle("\(categoriesQuery.count) Categories")
         .sheet(
             item: $selectedCategory,
             onDismiss: {
                 selectedCategory = nil
             },
             content: { item in
-                NavigationStack {
                     CategoryDetail(categoryObj: item) {
                         navigateToCategorizedTask = true
                     }
                     .interactiveDismissDisabled()
-                    .presentationDetents([.height(400)])
-                }
+                    .presentationDetents([.height( item.todos.isEmpty ? 360 : 440)])
+                
             }
         )
         .toolbar(addingCategory ? .hidden : .visible)  // show and hide toolbar
@@ -136,7 +136,6 @@ struct AllCategories: View {
                 }
             }
         }
-
         .overlay {
             if addingCategory {
                 ZStack {
@@ -154,6 +153,7 @@ struct AllCategories: View {
             }
         }
         .animation(.easeInOut, value: addingCategory)
+        .animation(.smooth, value: categoriesQuery)
     }
 }
 

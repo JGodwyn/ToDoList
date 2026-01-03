@@ -90,3 +90,96 @@ extension [TodoItem] {
         }
     }
 }
+
+
+// for filtering
+enum FilterTypes {
+    case filterHome // this is weird lol, had to do this for better navigation
+    case Today
+    case Upcoming
+    case Overdue
+    case Important
+    case Ongoing
+    case Completed
+    case ImageAdded
+
+    var title: String {
+        switch self {
+        case .filterHome: return "Home"
+        case .Today: return "Today"
+        case .Upcoming: return "Upcoming"
+        case .Overdue: return "Overdue"
+        case .Important: return "Important"
+        case .Ongoing: return "Ongoing"
+        case .Completed: return "Completed"
+        case .ImageAdded: return "Image added"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .filterHome: return "line.3.horizontal.decrease"
+        case .Today: return "calendar"
+        case .Upcoming: return "calendar.badge.clock"
+        case .Overdue: return "calendar.badge.exclamationmark"
+        case .Important: return "exclamationmark.3"
+        case .Ongoing: return "clock.badge"
+        case .Completed: return "checkmark"
+        case .ImageAdded: return "photo"
+        }
+    }
+
+    func filter() -> Predicate<TodoItem> {
+        let now = Date.now
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: now)
+        let startOfTomorrow = calendar.date(
+            byAdding: .day,
+            value: 1,
+            to: startOfToday
+        )!
+
+        switch self {
+        case .filterHome:
+            return #Predicate<TodoItem> { item in
+                item.isCompleted && !item.isCompleted // this is also weird lol cos i am not using it, i just need it for better navigation
+            }
+            
+        case .Today:
+            return #Predicate<TodoItem> { item in
+                item.timeStamp >= startOfToday
+                    && item.timeStamp < startOfTomorrow
+            }
+
+        case .Upcoming:
+            return #Predicate<TodoItem> { item in
+                item.timeStamp >= startOfTomorrow
+            }
+
+        case .Overdue:
+            return #Predicate<TodoItem> { item in
+                item.timeStamp < startOfToday && !item.isCompleted
+            }
+
+        case .Important:
+            return #Predicate<TodoItem> { item in
+                item.isCritical
+            }
+
+        case .Ongoing:
+            return #Predicate<TodoItem> { item in
+                !item.isCompleted
+            }
+
+        case .Completed:
+            return #Predicate<TodoItem> { item in
+                item.isCompleted
+            }
+
+        case .ImageAdded:
+            return #Predicate<TodoItem> { item in
+                item.image != nil
+            }
+        }
+    }
+}

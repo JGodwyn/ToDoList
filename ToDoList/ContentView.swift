@@ -11,14 +11,8 @@ import SwiftUI
 struct ContentView: View {
 
     @Environment(\.modelContext) var context
-    @AppStorage("TaskSortValue") private var sortTasksBy : SortableFields = .timeStamp
+    @Environment(NavigationManager.self) private var navManager
     
-    @State private var showCreateSheet: Bool = false
-    @State private var showCompletedTask: Bool = false
-    @State private var searchQuery: String = ""
-    @State private var navigationTitle: String = ""
-    @State private var showSearchBar : Bool = false
-    @State private var selectedTodo: TodoItem?
     @Query private var todoQuery: [TodoItem]
     
     @Query(
@@ -31,10 +25,23 @@ struct ContentView: View {
     ) private var completedTodos: [TodoItem]
     
     @Query(sort: \Categories.created, order: .reverse) private
-        var categoriesQuery: [Categories]
+    var categoriesQuery: [Categories]
+    
+    @AppStorage("TaskSortValue") private var sortTasksBy : SortableFields = .timeStamp
+    @State private var showCreateSheet: Bool = false
+    @State private var showCompletedTask: Bool = false
+    @State private var searchQuery: String = ""
+    @State private var navigationTitle: String = ""
+    @State private var showSearchBar : Bool = false
+    @State private var selectedTodo: TodoItem?
+    @State private var showFilters : Bool = false
+    
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: Binding(
+            get: { navManager.navigator },
+            set: { navManager.navigator = $0 }
+        )) {
             List {
                 if showCompletedTask {
                     completedTaskList()
@@ -51,13 +58,31 @@ struct ContentView: View {
                     taskName: showCompletedTask ? "Completed" : "Ongoing"
                 )
             )
+            .navigationDestination(for: FilterTypes.self) { screen in
+                switch screen {
+                case .filterHome:
+                    FilterCriteria()
+                case .Today :
+                    IndividualFilterScreen(filterType: .Today)
+                case  .Upcoming :
+                    IndividualFilterScreen(filterType: .Upcoming)
+                case .Overdue :
+                    IndividualFilterScreen(filterType: .Overdue)
+                case .Important :
+                    IndividualFilterScreen(filterType: .Important)
+                case .Ongoing :
+                    IndividualFilterScreen(filterType: .Ongoing)
+                case .Completed :
+                    IndividualFilterScreen(filterType: .Completed)
+                case .ImageAdded :
+                    IndividualFilterScreen(filterType: .ImageAdded)
+                }
+            }
             .animation(.smooth(duration: 0.1), value: ongoingTodos)
             .animation(.smooth(duration: 0.1), value: completedTodos)
             .animation(.smooth(duration: 0.1), value: showCompletedTask)
             .animation(.smooth(duration: 0.1), value: searchQuery)
             .animation(.smooth(duration: 0.1), value: sortTasksBy)
-//            .animation(.smooth(duration: 0.1), value: searchOngoingTodos)
-//            .animation(.smooth(duration: 0.1), value: searchCompletedTodos)
             .sheet(isPresented: $showCreateSheet) {
                 NavigationStack {
                     CreateToDo() { showCompletedTask = false }
@@ -129,7 +154,7 @@ struct ContentView: View {
                         }
                         
                         Button {
-                            // for filters
+                            navManager.push(to: .filterHome)
                         } label: {
                             HStack(spacing: 0) {
                                 Image(systemName: "line.3.horizontal.decrease")
@@ -305,7 +330,6 @@ struct ContentView: View {
                             .tint(.blue)
                     }
                 }
-
         }
     }
 
@@ -420,4 +444,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .modelContainer(for: [TodoItem.self, Categories.self])
+        .environment(NavigationManager())
 }

@@ -27,7 +27,10 @@ struct CategoryDetail: View {
                         .onTapGesture {
                             showColorMenu = false
                         }
-                    VStack(spacing: 24) {
+                    VStack(alignment: .leading, spacing: 24) {
+                        Text("Edit category")
+                            .font(.system(size: 32, weight: .bold))
+                        
                         VStack {
                             TextField("Category name", text: $tempCategory.name)
                                 .focused($inputNameFocused)
@@ -45,21 +48,29 @@ struct CategoryDetail: View {
                                 ViewCategoriesSection
                             }
                         }
-                        .padding(.top, 16)
 
-                        MainButton(
-                            label: "Save changes",
-                            fillContainer: true,
-                            disabled: tempCategory.name.isEmpty
-                        ) {
-                            showColorMenu = false
-                            categoryObj.name = tempCategory.name
-                            categoryObj.colorCode = tempCategory.colorCode
-                            categoryObj.colorName = tempCategory.colorName
-                            dismiss()
+                        VStack (alignment: .leading, spacing: 16) {
+                            MainButton(
+                                label: "Save changes",
+                                fillContainer: true,
+                                disabled: tempCategory.name.isEmpty
+                            ) {
+                                showColorMenu = false
+                                categoryObj.name = tempCategory.name
+                                categoryObj.colorCode = tempCategory.colorCode
+                                categoryObj.colorName = tempCategory.colorName
+                                dismiss()
+                            }
+                            
+                            MainButton(label: "Cancel", lightBtn: true, fillContainer: true) {
+                                dismiss()
+                            }
                         }
+                        .frame(maxHeight: .infinity, alignment: .top)
+                        
                     }
-                    .padding(.horizontal, 20)
+                    .padding(20)
+                    .padding(.top, 20)
                     .frame(maxHeight: .infinity, alignment: .top)
                     .overlay(alignment: .topTrailing) {
                         // Color menu
@@ -68,18 +79,18 @@ struct CategoryDetail: View {
                         }
                     }
                 }
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Cancel") {
-                            dismiss()
-                        }
-                    }
-                }
                 .animation(.spring(duration: 0.2), value: showColorMenu)
                 .animation(.easeOut(duration: 0.1), value: tempCategory.name)
                 .onChange(of: inputNameFocused) {
                     if inputNameFocused == true {
                         showColorMenu = false
+                    }
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        dismiss()
                     }
                 }
             }

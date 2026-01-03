@@ -139,7 +139,11 @@ struct CreateCategory: View {
                         } else {
                             CategoryItem.colorCode = CategoryColor.colorCode
                             CategoryItem.colorName = CategoryColor.colorDescription
-                            context.insert(CategoryItem)
+                            DispatchQueue.main.asyncAfter(
+                                deadline: .now() + 0.5
+                            ) {
+                                context.insert(CategoryItem)
+                            }
                             tappedButton()
                         }
                     }

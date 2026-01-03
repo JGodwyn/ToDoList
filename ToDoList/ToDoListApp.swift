@@ -13,6 +13,7 @@ import SwiftData
 @main
 struct ToDoListApp: App {
     
+    @State private var navObj = NavigationManager()
     @AppStorage("FirstTimeUsingTheApp") private var isFirstTimeUsingTheApp: Bool = true
     
     var body: some Scene {
@@ -21,5 +22,6 @@ struct ToDoListApp: App {
                 .modelContainer(AppModelContainer.create(createDefaults: &isFirstTimeUsingTheApp))
             //                .modelContainer(for: [TodoItem.self, Categories.self])
         }
+        .environment(navObj) // use this to navigate
     }
 }
