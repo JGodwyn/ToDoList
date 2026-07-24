@@ -73,7 +73,6 @@ struct CategorizedTask: View {
                 // had to pass this to a @State property cos
                 // Swift don't update the values of transient properties...for now
             }
-        
     }
 }
 
